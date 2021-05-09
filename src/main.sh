@@ -54,7 +54,7 @@ elif test "$1" = "account" && test "$2" = "get"; then
 elif test "$1" = "peer" && test "$2" = "get"; then
     shift 2; peer_get $@; exit $?
 elif test "$1" = "recommend"; then
-    shift 1; recommend $@
+    shift 1; recommend $@; exit $?
 elif test "$1" = "-h" || test "$1" = "--help" || test "$1" = "help"; then
     help >&1; exit 0
 else
