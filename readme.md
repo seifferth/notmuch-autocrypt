@@ -20,7 +20,12 @@ at `out/notmuch-autocrypt`. Simply run `make` to compile it.
 
 ## Usage
 
-TODO
+```
+Usage: notmuch-autocrypt account init <email>
+       notmuch-autocrypt account get <email> [field]
+       notmuch-autocrypt peer get <email> [field]
+       notmuch-autocrypt recommend <email> [email]...
+```
 
 ## Key storage
 
