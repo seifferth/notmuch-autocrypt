@@ -21,7 +21,8 @@ at `out/notmuch-autocrypt`. Simply run `make` to compile it.
 ## Usage
 
 ```
-Usage: notmuch-autocrypt account init <email>
+Usage: notmuch-autocrypt new
+       notmuch-autocrypt account init <email>
        notmuch-autocrypt account get <email> [field]
        notmuch-autocrypt peer get <email> [field]
        notmuch-autocrypt recommend <email> [email]...

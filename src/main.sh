@@ -1,6 +1,13 @@
 #!/bin/bash
 set -e
 
+new() {
+#include new.sh $@
+echo "It looks like you're running a non-compiled version " \
+     "of notmuch-autocrypt" | fmt >&2
+exit 120
+#endinclude
+}
 account_init() {
 #include account_init.sh $@
 echo "It looks like you're running a non-compiled version " \
@@ -32,7 +39,8 @@ exit 120
 
 help() {
 cat <<EOF
-Usage: notmuch-autocrypt account init <email>
+Usage: notmuch-autocrypt new
+       notmuch-autocrypt account init <email>
        notmuch-autocrypt account get <email> [field]
        notmuch-autocrypt peer get <email> [field]
        notmuch-autocrypt recommend <email> [email]...
@@ -47,7 +55,9 @@ fi
 
 IFS=""
 # Parse main argument
-if test "$1" = "account" && test "$2" = "init"; then
+if test "$1" = "new"; then
+    shift 1; new $@; exit $?
+elif test "$1" = "account" && test "$2" = "init"; then
     shift 2; account_init $@; exit $?
 elif test "$1" = "account" && test "$2" = "get"; then
     shift 2; account_get $@; exit $?

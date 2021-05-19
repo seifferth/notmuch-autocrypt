@@ -41,36 +41,36 @@ get_message_date() {
     date -u --date="$d" +'%F %T'
 }
 
-# Validate that there is an autocrypt header, and that there is only one
-# autocrypt header.
-has_valid_autocrypt_header() {
-    get_autocrypt_header "$1" |
-        grep '^Autocrypt:' |
-        wc -l | grep -q '^1$' || return 1
-}
+# Some common exclusion filters for notmuch search
+common_search_filters="date:..today not mimetype:multipart/report not tag:spam"
 
-# Done:
-#   - Ignore multipart/report
-#   - Ignore possible "spam" (assuming the user tags it as "spam")
-# TODO:
-#   - Ignore messages with more than one "From" header. I am not sure
-#     if this is already handled or not.
-files="$(notmuch search \
-            --output=files \
-            --sort=newest-first \
-            from:"$peer" not mimetype:multipart/report not tag:spam
-        )"
-for f in $files; do
-    test -f "$f" || exit 1
-    test "$last_seen" || last_seen="$(get_message_date "$f")"
-    if has_valid_autocrypt_header "$f"; then
-        autocrypt_timestamp="$(get_message_date "$f")"
-        public_key="$(get_autocrypt_value keydata "$f")"
-        prefer_encrypt="$(get_autocrypt_value prefer-encrypt "$f")"
-        test "$prefer_encrypt" || prefer_encrypt="nopreference"
-        break
-    fi
-done
+# Get last_seen. This is determined by the latest message from the peer, with
+# or without an autocrypt header.
+f="$(notmuch search \
+        --output=files \
+        --sort=newest-first \
+        from:"$peer" $common_search_filters \
+        | head -n1
+    )"
+if test -f "$f"; then
+    last_seen="$(get_message_date "$f")"
+fi
+
+# Get autocrypt-specific fields. This is determined by the last message from the
+# peer containing valid autocrypt headers. We tag such messages with tag:autocrypt
+# during the 'notmuch autocrypt new' indexing stage to speed up retrieval here.
+f="$(notmuch search \
+        --output=files \
+        --sort=newest-first \
+        from:"$peer" tag:autocrypt $common_search_filters \
+        | head -n1
+    )"
+if test -f "$f"; then
+    autocrypt_timestamp="$(get_message_date "$f")"
+    public_key="$(get_autocrypt_value keydata "$f")"
+    prefer_encrypt="$(get_autocrypt_value prefer-encrypt "$f")"
+    test "$prefer_encrypt" || prefer_encrypt="nopreference"
+fi
 
 extract_field() {
     grep "^$1=" | sed "s,^$1=,,g"
