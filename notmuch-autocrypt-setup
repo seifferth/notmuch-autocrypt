@@ -1,0 +1,24 @@
+#!/bin/sh
+
+print_help() {
+cat <<EOF
+Usage: notmuch-autocrypt-setup SETUP-MESSAGE [PASSPHRASE]
+
+EOF
+}
+if test "$1" = -h || test "$1" = --help; then
+    print_help
+    exit 0
+elif ! test "$#" = 1 && ! test "$#" = 2; then
+    print_help >&2
+    exit 1
+fi
+
+if test "$#" = 2; then
+    passphrase="$2"
+else
+    read -p "Passphrase: " passphrase
+fi
+cat "$1" |
+    gpg --batch --decrypt --passphrase "$passphrase" |
+    gpg --import
