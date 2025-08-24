@@ -1,24 +1,104 @@
 # notmuch-autocrypt
 
-These are some very hackish scripts for using autocrypt keys with notmuch
-and gpg. They are very far from being an actual implementation. Still,
-they might come handy to people who use multi-client email setups where
-some of their email clients are autocrypt-capable. Currently, this repo
-contains the following scripts:
+[Autocrypt](https://docs.autocrypt.org/) is a new-ish (2019) standard
+for distributing OpenPGP public keys in email headers in order to enable
+opportunistic end-to-end encryption for email. The actual autocrypt spec
+talks a lot about MUAs keeping a peer state table. An alternative way
+of conceptualizing autocrypt --- and one that would arguably be closer
+to how notmuch conceptualizes email --- would be to view the email
+database itself as an OpenPGP key store. The 'notmuch-autocrypt' script
+provided in this repository takes this second view and allows users to
+conveniently import autocrypt keys from their email database into their
+gpg keyring. While this does not turn notmuch into a standards-compliant
+autocrypt client just yet, it should be enough to bring the key benefit
+of autocrypt to any notmuch- and gpg-based email setup.
 
-`notmuch-autocrypt-lookup <PEER-ADDRESS>`
-: Look for an autocrypt header in recent messages from `PEER-ADDRESS`
-  and, if found, import the public key into the gpg keyring.
+The 'notmuch-autocrypt' script provides two main functions through
+a gpg-inspired command line interface:
 
-`notmuch-autocrypt-setup <SETUP-MESSAGE> [PASSPHRASE]`
-: Import the private key from the autocrypt setup message `SETUP-MESSAGE`
-  into the gpg keyring. If no passphrase is provided, the user will be
-  prompted interactively. Note that this command should not be run on
-  a multi-user system as it invokes gpg with the `--passphrase` option.
+`notmuch autocrypt --locate-keys EMAIL...`
+: Import the public key found in the most recent autocrypt header sent by
+  `EMAIL` into the gpg keyring. This command is roughly equivalent to
+  how one would use `gpg --locate-external-keys` to import keys from a
+  Web Key Directory, for instance.
+
+`notmuch autocrypt --import-secret-key SETUP-MESSAGE [PASSPHRASE]`
+: Import the secret key found in `SETUP-MESSAGE` into the gpg keyring.
+  This command is useful for configuring notmuch and gpg in a multi-client
+  autocrypt setup. Note that this command is not safe to run on a
+  multi-user system as it invokes gpg with the `--passphrase` option
+  under the hood.
+
+
+## Dependencies
+
+* POSIX-compliant shell scripting environment
+* notmuch
+* gpg
+
+
+## Limitations
+
+1. Autocrypt uses a very restricted subset of OpenPGP. Most notably, it
+   supposes that each user has only two keys. One primary key used for
+   generating signatures and one subkey used for encryption. In order
+   to prevent incompatibilities between gpg and autocrypt-compatible
+   email clients that do not implement the full set of options provided
+   by OpenPGP, it might be a good idea to use gpg with a private keyring
+   that only contains a single, autocrypt-compatible identity.
+
+2. There is currently no support for generating autocrypt-compatible
+   key pairs with 'notmuch-autocrypt'. Since autocrypt-compatible keys
+   are simply a very limited subset of all possible OpenPGP keys, it
+   should be rather easy to provide a command like `notmuch autocrypt
+   --generate-key` that simply wraps `gpg --quick-generate-key` using the
+   correct autocrypt-specific settings. If anyone should be interested
+   in testing such a feature, please drop me a note.
+
+3. There is also no support for generating autocrypt setup messages with
+   'notmuch-autocrypt'. Generating setup messages probably only makes
+   sense once 'notmuch-autocrypt' can also generate key pairs; and
+   adding such a feature would require at least some integration tests
+   with other autocrypt-compatible email clients. However, if anyone
+   should be interested in performing such tests, I would be happy to
+   add a command like `notmuch autocrypt --generate-setup-message`.
+
+4. The algorithm for recommending encryption settings that is described
+   in the autocrypt specification is not implemented. Since this algorithm
+   makes extensive use of the peer state table, it is also unclear whether
+   this algorithm could be implemented in 'notmuch-autocrypt' without
+   tracking additional information, like the timestamp of when a message
+   was first seen by notmuch --- which is different from the timestamp
+   in the Date header that notmuch relies on. I also have serious doubts
+   if implementing this recommendation algorithm in 'notmuch-autocrypt'
+   would provide any palpable benefits; and I strongly suspect integrating
+   this feature with the various notmuch frontends would not be worth the
+   effort. As far as I am concerned, I am very happy to deviate from the
+   autocrypt spec on this point by using the far simpler recommendation
+   algorithm implemented in [bower](https://github.com/wangp/bower/): Is
+   the message encrypted and signed? Then also encrypt and sign the reply.
+
+5. Finally, 'notmuch-autocrypt' does not take care of adding autocrypt
+   headers to outbound email. Since modifying outbound email is beyond
+   the scope of what notmuch is supposed to do, it would also make little
+   sense to try and add this feature to 'notmuch-autocrypt'. On the other
+   hand, autocrypt headers are basically just static strings that are
+   added to each outbound message. It should therefore be fairly easy to
+   add support for autocrypt headers to the various notmuch frontends.
+   The autocrypt header only contains the sender's email address,
+   an optional 'prefer-encrypt' setting and a base64-encoded OpenPGP
+   public key referred to as 'keydata' in the autocrypt spec. This
+   'keydata' can be generated by running `gpg --export PUBKEY | base64`;
+   provided that `PUBKEY` is a minimized OpenPGP key that fulfils the
+   requirements outlined in the autocrypt specification. I suspect that
+   the easiest way of adding support for sending autocrypt headers to a
+   notmuch frontend would be to add a configuration option that stores
+   this base64-encoded public key. However, I would also be open to
+   discuss this point further if anyone should see the need.
 
 
 ## License
 
-The scripts in this repository are licensed under hte terms of the GNU
-General Public License, version 3 or later. A copy of this license is
-included in the repository as `license.txt`.
+All files contained in this repository are licensed under the terms
+of the GNU General Public License, version 3 or later. A copy of this
+license is included in the repository as `license.txt`.
