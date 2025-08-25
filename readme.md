@@ -25,9 +25,7 @@ a gpg-inspired command line interface:
 `notmuch autocrypt --import-secret-key SETUP-MESSAGE [PASSPHRASE]`
 : Import the secret key found in `SETUP-MESSAGE` into the gpg keyring.
   This command is useful for configuring notmuch and gpg in a multi-client
-  autocrypt setup. Note that this command is not safe to run on a
-  multi-user system as it invokes gpg with the `--passphrase` option
-  under the hood.
+  autocrypt setup.
 
 
 ## Dependencies

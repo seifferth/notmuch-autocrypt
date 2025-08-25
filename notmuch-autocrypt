@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 print_help() {
 cat <<EOF
@@ -13,9 +13,7 @@ Commands
             Decrypt the setup message found in the file provided as
             the first argument and import the secret key into the gpg
             keyring. If no passphrase is provided, the user will be
-            prompted interactively. Note that this command is not safe
-            to run on a multi-user system as it invokes gpg with the
-            '--passphrase' option under the hood.
+            prompted interactively.
     -h, --help
             Print this help message and exit.
 
@@ -49,8 +47,7 @@ import_secret_key() {
     else
         read -p "Passphrase: " passphrase
     fi
-    cat "$1" |
-        gpg --batch --decrypt --passphrase "$passphrase" |
+    gpg --batch --decrypt --passphrase-fd 0 "$1" <<<"$passphrase" |
         gpg --import
 }
 
