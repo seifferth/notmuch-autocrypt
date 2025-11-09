@@ -29,6 +29,7 @@ locate_keys() {
                 from:"$1" |
             xargs awk \
                 'BEGIN { output=0 };
+                 /^[ \t]*$/ { nextfile };
                  /^Autocrypt:/ { print; output=1; next };
                  output==1 && /^[ \t]/ { print };
                  output==1 && /^[^ \t]/ { exit };' |
