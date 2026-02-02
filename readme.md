@@ -4,8 +4,8 @@
 for distributing OpenPGP public keys in email headers in order to enable
 opportunistic end-to-end encryption for email. The actual autocrypt spec
 talks a lot about MUAs keeping a peer state table. An alternative way
-of conceptualizing autocrypt --- and one that would arguably be closer
-to how notmuch conceptualizes email --- would be to view the email
+of conceptualizing autocrypt -- and one that would arguably be closer
+to how notmuch conceptualizes email -- would be to view the email
 database itself as an OpenPGP key store. The 'notmuch-autocrypt.py' script
 provided in this repository takes this second view and allows users to
 conveniently import autocrypt keys from their email database into their
