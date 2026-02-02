@@ -30,8 +30,8 @@ a gpg-inspired command line interface:
 
 ## Dependencies
 
-* POSIX-compliant shell scripting environment
-* notmuch
+* A patched version of notmuch (available at https://github.com/seifferth/notmuch)
+* python3-pgpy
 * gpg
 
 
