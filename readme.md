@@ -6,14 +6,14 @@ opportunistic end-to-end encryption for email. The actual autocrypt spec
 talks a lot about MUAs keeping a peer state table. An alternative way
 of conceptualizing autocrypt --- and one that would arguably be closer
 to how notmuch conceptualizes email --- would be to view the email
-database itself as an OpenPGP key store. The 'notmuch-autocrypt' script
+database itself as an OpenPGP key store. The 'notmuch-autocrypt.py' script
 provided in this repository takes this second view and allows users to
 conveniently import autocrypt keys from their email database into their
 gpg keyring. While this does not turn notmuch into a standards-compliant
 autocrypt client just yet, it should be enough to bring the key benefit
 of autocrypt to any notmuch- and gpg-based email setup.
 
-The 'notmuch-autocrypt' script provides two main functions through
+The 'notmuch-autocrypt.py' script provides two main functions through
 a gpg-inspired command line interface:
 
 `notmuch autocrypt --locate-keys EMAIL...`
@@ -26,6 +26,30 @@ a gpg-inspired command line interface:
 : Import the secret key found in `SETUP-MESSAGE` into the gpg keyring.
   This command is useful for configuring notmuch and gpg in a multi-client
   autocrypt setup.
+
+
+## Computing the UI Recommendation
+
+The autocrypt spec also specifies an algorithm that can optionally be
+used to compute a recommendation for whether or not a message should
+be encrypted. This algorithm depends both on the state of the 'peers'
+table and on the user's autocrypt settings and will always output one
+of the following four values: 'disable', 'discourage', 'available', and
+'encrypt'. Since computing this recommendation is somewhat involved,
+the implementation of this algorithm has not been included in the main
+'notmuch-autocrypt.py' script and is instead provided as a standalone
+script named 'provide_ui_recommendation.py'. This reference implementation
+is provided as a proof of concept that shows how the ui-recommendation
+could be computed by using queries against a notmuch database rather
+than by maintaining a peers table. As of now, this implementation is
+not 100 % feature complete yet, as it does not take the keydata itself
+(especially: key expiry or key revocation) into account. However, this
+data is already queried to determine whether a key exists at all --
+so extending the implementation to also check the expiry date should be
+fairly straightforward. Also note that the implementation is far from
+optimized, so frontends that wish to make use of the ui-recommendation
+might prefer to use their own implementation instead. For usage
+information see `./provide_ui_recommendation.py --help`.
 
 
 ## Dependencies
@@ -61,22 +85,7 @@ a gpg-inspired command line interface:
    should be interested in performing such tests, I would be happy to
    add a command like `notmuch autocrypt --generate-setup-message`.
 
-4. The algorithm for recommending encryption settings that is described
-   in the autocrypt specification is not implemented. Since this algorithm
-   makes extensive use of the peer state table, it is also unclear whether
-   this algorithm could be implemented in 'notmuch-autocrypt' without
-   tracking additional information, like the timestamp of when a message
-   was first seen by notmuch --- which is different from the timestamp
-   in the Date header that notmuch relies on. I also have serious doubts
-   if implementing this recommendation algorithm in 'notmuch-autocrypt'
-   would provide any palpable benefits; and I strongly suspect integrating
-   this feature with the various notmuch frontends would not be worth the
-   effort. As far as I am concerned, I am very happy to deviate from the
-   autocrypt spec on this point by using the far simpler recommendation
-   algorithm implemented in [bower](https://github.com/wangp/bower/): Is
-   the message encrypted and signed? Then also encrypt and sign the reply.
-
-5. Finally, 'notmuch-autocrypt' does not take care of adding autocrypt
+4. Finally, 'notmuch-autocrypt' does not take care of adding autocrypt
    headers to outbound email. Since modifying outbound email is beyond
    the scope of what notmuch is supposed to do, it would also make little
    sense to try and add this feature to 'notmuch-autocrypt'. On the other
