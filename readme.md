@@ -54,7 +54,8 @@ information see `./provide_ui_recommendation.py --help`.
 
 ## Dependencies
 
-* A patched version of notmuch (available at https://github.com/seifferth/notmuch)
+* A patched version of notmuch (available at
+  https://github.com/seifferth/notmuch as branch 'autocrypt')
 * python3-pgpy
 * gpg
 
